@@ -12,3 +12,8 @@ SELECT EXISTS (
 SELECT EXISTS (
     SELECT 1 FROM app.account WHERE email = $1
 );
+
+-- name: GetAccountByUsername :one
+SELECT *
+FROM app.account
+WHERE username = $1;

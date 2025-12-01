@@ -14,6 +14,7 @@ func (h *Handler) Router() *gin.Engine {
 	v1 := router.Group("api/v1")
 	{
 		v1.POST("register", h.Register)
+		v1.POST("login", h.Login)
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

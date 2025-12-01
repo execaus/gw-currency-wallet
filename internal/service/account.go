@@ -13,6 +13,32 @@ type AccountService struct {
 	s *Service
 }
 
+func (s *AccountService) Login(ctx context.Context, username, password string) (string, error) {
+	account, err := s.r.GetByUsername(ctx, username)
+	if err != nil {
+		zap.L().Error(err.Error())
+		return "", err
+	}
+
+	if account == nil {
+		zap.L().Warn("invalid username")
+		return "", ErrInvalidCredentials
+	}
+
+	if err = s.s.Auth.ComparePassword(account.Password, password); err != nil {
+		zap.L().Warn("invalid password")
+		return "", ErrInvalidCredentials
+	}
+
+	token, err := s.s.Auth.GenerateJWT(account.Username)
+	if err != nil {
+		zap.L().Error(err.Error())
+		return "", err
+	}
+
+	return token, nil
+}
+
 func (s *AccountService) Register(ctx context.Context, email, username, password string) (*models.Account, error) {
 	passwordHash, err := s.s.Auth.HashPassword(password)
 	if err != nil {

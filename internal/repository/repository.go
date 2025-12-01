@@ -11,6 +11,7 @@ type Account interface {
 	IsEmailExist(ctx context.Context, email string) (bool, error)
 	IsUsernameExist(ctx context.Context, username string) (bool, error)
 	Create(ctx context.Context, email, username, passwordHash string) (*db.AppAccount, error)
+	GetByUsername(ctx context.Context, username string) (*db.AppAccount, error)
 }
 
 type Repository struct {

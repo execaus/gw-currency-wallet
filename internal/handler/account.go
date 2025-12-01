@@ -43,3 +43,38 @@ func (h *Handler) Register(c *gin.Context) {
 
 	sendCreated(c, "User registered successfully")
 }
+
+// Login godoc
+// @Summary Авторизация пользователя
+// @Description Авторизация пользователя. При успешной авторизации возвращается JWT-токен.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "User login data"
+// @Success 200 {object} dto.LoginResponse "JWT-token"
+// @Failure 401 {object} dto.Message "Invalid username or password"
+// @Router /api/v1/login [post]
+func (h *Handler) Login(c *gin.Context) {
+	var in dto.LoginRequest
+
+	if err := c.BindJSON(&in); err != nil {
+		sendBadRequest(c, err)
+		return
+	}
+
+	token, err := h.s.Account.Login(c, in.Username, in.Password)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidCredentials):
+			sendBadRequest(c, err)
+		default:
+			zap.L().Error(err.Error())
+			sendInternalError(c)
+		}
+		return
+	}
+
+	sendOK(c, &dto.LoginResponse{
+		Token: token,
+	})
+}

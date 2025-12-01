@@ -28,6 +28,19 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 	return i, err
 }
 
+const getAccountByUsername = `-- name: GetAccountByUsername :one
+SELECT email, username, password
+FROM app.account
+WHERE username = $1
+`
+
+func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (AppAccount, error) {
+	row := q.db.QueryRow(ctx, getAccountByUsername, username)
+	var i AppAccount
+	err := row.Scan(&i.Email, &i.Username, &i.Password)
+	return i, err
+}
+
 const isAccountExistsByEmail = `-- name: IsAccountExistsByEmail :one
 SELECT EXISTS (
     SELECT 1 FROM app.account WHERE email = $1

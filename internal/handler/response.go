@@ -19,6 +19,10 @@ func sendInternalError(c *gin.Context) {
 	send(c, http.StatusInternalServerError, dto.Message{Message: "server error"})
 }
 
+func sendOK(c *gin.Context, body any) {
+	send(c, http.StatusOK, body)
+}
+
 func send(c *gin.Context, status int, body any) {
 	c.AbortWithStatusJSON(status, body)
 }

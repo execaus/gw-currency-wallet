@@ -11,6 +11,16 @@ type AccountRepository struct {
 	q *db.Queries
 }
 
+func (r *AccountRepository) GetByUsername(ctx context.Context, username string) (*db.AppAccount, error) {
+	account, err := r.q.GetAccountByUsername(ctx, username)
+	if err != nil {
+		zap.L().Error(err.Error())
+		return nil, err
+	}
+
+	return &account, nil
+}
+
 func (r *AccountRepository) IsEmailExist(ctx context.Context, email string) (bool, error) {
 	isExist, err := r.q.IsAccountExistsByEmail(ctx, email)
 	if err != nil {

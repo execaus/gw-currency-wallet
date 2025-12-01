@@ -16,6 +16,7 @@ type Auth interface {
 
 type Account interface {
 	Register(ctx context.Context, email, username, password string) (*models.Account, error)
+	Login(ctx context.Context, username, password string) (token string, err error)
 }
 
 type Service struct {
