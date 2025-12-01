@@ -1,0 +1,45 @@
+definitions:
+  dto.Message:
+    properties:
+      message:
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/register:
+    post:
+      consumes:
+      - application/json
+      description: Регистрация нового пользователя.
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            $ref: '#/definitions/dto.Message'
+        "400":
+          description: Username or email already exists
+          schema:
+            $ref: '#/definitions/dto.Message'
+      summary: Регистрация пользователя
+      tags:
+      - auth
+swagger: "2.0"
