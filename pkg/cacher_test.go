@@ -102,3 +102,99 @@ func TestCacher_InvalidUpdate_Error(t *testing.T) {
 	assert.EqualError(t, err, "update failed")
 	assert.Equal(t, 1, val)
 }
+
+func TestCacher_ForceSync_Success(t *testing.T) {
+	counter := 0
+	updateFn := func(ctx context.Context) (int, error) {
+		counter++
+		return counter, nil
+	}
+
+	c, err := NewCacher(t.Context(), updateFn, 1*time.Hour)
+	assert.NoError(t, err)
+
+	// Изначально данные не загружены
+	val, err := c.GetData(t.Context())
+	assert.NoError(t, err)
+	assert.Equal(t, 1, val)
+
+	// Принудительно обновляем данные
+	val, err = c.ForceSync(t.Context())
+	assert.NoError(t, err)
+
+	// После ForceSync значение должно увеличиться
+	assert.Equal(t, 2, val)
+
+	val, err = c.GetData(t.Context())
+	assert.NoError(t, err)
+	assert.Equal(t, 2, val)
+}
+
+func TestCacher_ForceSync_Error(t *testing.T) {
+	counter := 0
+	updateFn := func(ctx context.Context) (int, error) {
+		counter++
+		if counter == 2 {
+			return 0, errors.New("force sync failed")
+		}
+		return counter, nil
+	}
+
+	c, err := NewCacher(t.Context(), updateFn, 1*time.Hour)
+	assert.NoError(t, err)
+
+	// Первоначальная загрузка
+	val, err := c.GetData(t.Context())
+	assert.NoError(t, err)
+	assert.Equal(t, 1, val)
+
+	// Вторая попытка ForceSync вернет ошибку
+	val, err = c.ForceSync(t.Context())
+	assert.Error(t, err)
+	assert.EqualError(t, err, "force sync failed")
+
+	// Значение при ошибке не меняется
+	val, err = c.GetData(t.Context())
+	assert.NoError(t, err)
+	assert.Equal(t, 1, val)
+}
+
+func TestCacher_ForceSync_Concurrent(t *testing.T) {
+	counter := 0
+	updateFn := func(ctx context.Context) (int, error) {
+		time.Sleep(50 * time.Millisecond)
+		counter++
+		return counter, nil
+	}
+
+	c, err := NewCacher(t.Context(), updateFn, 1*time.Hour)
+	assert.NoError(t, err)
+
+	// Первоначальная загрузка
+	val, err := c.GetData(t.Context())
+	assert.NoError(t, err)
+	assert.Equal(t, 1, val)
+
+	var wg sync.WaitGroup
+	errs := make([]error, 5)
+
+	wg.Add(5)
+	for i := 0; i < 5; i++ {
+		go func(i int) {
+			defer wg.Done()
+			_, err := c.ForceSync(t.Context())
+			errs[i] = err
+		}(i)
+	}
+	wg.Wait()
+
+	// Все вызовы ForceSync должны завершиться без ошибок
+	for i, err := range errs {
+		assert.NoError(t, err, "goroutine %d: unexpected error", i)
+	}
+
+	// Значение должно увеличиться ровно на 1 после всех ForceSync
+	val, err = c.GetData(t.Context())
+	assert.NoError(t, err)
+	assert.Equal(t, 2, val)
+}

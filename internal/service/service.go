@@ -12,6 +12,7 @@ import (
 type Exchange interface {
 	IsExistCurrency(ctx context.Context, currency pkg.Currency) (bool, error)
 	GetRates(ctx context.Context) (pkg.ExchangeRates, error)
+	GetRate(ctx context.Context, from, to pkg.Currency) (pkg.Rate, error)
 }
 
 type Wallet interface {
@@ -19,6 +20,7 @@ type Wallet interface {
 	Deposit(ctx context.Context, email string, currency pkg.Currency, amount float32) (pkg.AccountWallets, error)
 	Withdraw(ctx context.Context, email string, currency pkg.Currency, amount float32) (pkg.AccountWallets, error)
 	GetRates(ctx context.Context) (pkg.ExchangeRates, error)
+	Exchange(ctx context.Context, email string, from, to pkg.Currency, amount float32) (exchangedAmount float32, wallets pkg.AccountWallets, err error)
 }
 
 type Auth interface {

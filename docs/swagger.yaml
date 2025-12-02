@@ -16,6 +16,24 @@ definitions:
       new_balance:
         $ref: '#/definitions/pkg.AccountWallets'
     type: object
+  dto.ExchangeRequest:
+    properties:
+      amount:
+        type: number
+      from_currency:
+        type: string
+      to_currency:
+        type: string
+    type: object
+  dto.ExchangeResponse:
+    properties:
+      exchanged_amount:
+        type: number
+      message:
+        type: string
+      new_balance:
+        $ref: '#/definitions/pkg.AccountWallets'
+    type: object
   dto.GetRatesResponse:
     properties:
       rates:
@@ -110,6 +128,39 @@ paths:
       summary: Получение кошельков пользователя
       tags:
       - wallet
+  /api/v1/exchange:
+    post:
+      consumes:
+      - application/json
+      description: Позволяет пользователю обменять одну валюту на другую по текущему
+        курсу.
+      parameters:
+      - description: Данные для обмена валют
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ExchangeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Exchange successful
+          schema:
+            $ref: '#/definitions/dto.ExchangeResponse'
+        "400":
+          description: Insufficient funds or invalid currencies
+          schema:
+            $ref: '#/definitions/dto.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Message'
+      security:
+      - BearerAuth: []
+      summary: Обмен валют
+      tags:
+      - exchange
   /api/v1/exchange/rates:
     get:
       consumes:

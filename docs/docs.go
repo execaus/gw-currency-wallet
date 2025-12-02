@@ -49,6 +49,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/exchange": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Позволяет пользователю обменять одну валюту на другую по текущему курсу.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchange"
+                ],
+                "summary": "Обмен валют",
+                "parameters": [
+                    {
+                        "description": "Данные для обмена валют",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ExchangeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Exchange successful",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ExchangeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Insufficient funds or invalid currencies",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/exchange/rates": {
             "get": {
                 "security": [
@@ -285,6 +336,34 @@ const docTemplate = `{
         "dto.DepositResponse": {
             "type": "object",
             "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "new_balance": {
+                    "$ref": "#/definitions/pkg.AccountWallets"
+                }
+            }
+        },
+        "dto.ExchangeRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "from_currency": {
+                    "type": "string"
+                },
+                "to_currency": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ExchangeResponse": {
+            "type": "object",
+            "properties": {
+                "exchanged_amount": {
+                    "type": "number"
+                },
                 "message": {
                     "type": "string"
                 },

@@ -2,15 +2,83 @@ package service
 
 import (
 	"context"
+	"errors"
 	gw_grpc "gw-currency-wallet/internal/pb/exchange"
 	"gw-currency-wallet/pkg"
+	"time"
 
 	"go.uber.org/zap"
+)
+
+const (
+	maxAttempts    = 3
+	retryInterval  = 500 * time.Millisecond
+	requestTimeout = 5 * time.Second
 )
 
 type ExchangeService struct {
 	rateCache *pkg.Cacher[pkg.ExchangeRates]
 	c         gw_grpc.ExchangeServiceClient
+}
+
+func (s *ExchangeService) GetRate(ctx context.Context, from, to pkg.Currency) (pkg.Rate, error) {
+	rates, err := s.rateCache.GetData(ctx)
+	if err != nil {
+		zap.L().Error(err.Error())
+		return -1, err
+	}
+
+	rateCh := make(chan float32, 1)
+	timeoutContext, cancel := context.WithTimeout(ctx, requestTimeout)
+	defer cancel()
+
+	go func() {
+		defer close(rateCh)
+
+		var fromRate, toRate float32
+		var fromOK, toOK bool
+
+		for i := 0; i < maxAttempts; i++ {
+			fromRate, fromOK = rates[from]
+			toRate, toOK = rates[to]
+
+			if fromOK && toOK {
+				rateCh <- toRate / fromRate
+				return
+			}
+
+			select {
+			case <-timeoutContext.Done():
+				return
+			case <-time.After(retryInterval):
+				newRates, err := s.rateCache.ForceSync(timeoutContext)
+				if err != nil {
+					zap.L().Error(err.Error())
+				} else {
+					rates = newRates
+				}
+			}
+		}
+
+		fromRate, fromOK = rates[from]
+		toRate, toOK = rates[to]
+		if fromOK && toOK {
+			rateCh <- toRate / fromRate
+			return
+		}
+	}()
+
+	select {
+	case <-timeoutContext.Done():
+		zap.L().Error(ErrTimeout)
+		return -1, errors.New(ErrTimeout)
+	case rate, ok := <-rateCh:
+		if !ok {
+			return -1, errors.New(ErrGetRate)
+		}
+		return rate, nil
+	}
+
 }
 
 func (s *ExchangeService) GetRates(ctx context.Context) (pkg.ExchangeRates, error) {

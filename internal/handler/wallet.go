@@ -164,3 +164,58 @@ func (h *Handler) GetRates(c *gin.Context) {
 		Rates: rates,
 	})
 }
+
+// Exchange godoc
+// @Summary Обмен валют
+// @Description Позволяет пользователю обменять одну валюту на другую по текущему курсу.
+// @Tags exchange
+// @Accept json
+// @Produce json
+// @Param input body dto.ExchangeRequest true "Данные для обмена валют"
+// @Success 200 {object} dto.ExchangeResponse "Exchange successful"
+// @Failure 400 {object} dto.Message "Insufficient funds or invalid currencies"
+// @Failure 500 {object} dto.Message "Internal server error"
+// @Router /api/v1/exchange [post]
+// @Security BearerAuth
+func (h *Handler) Exchange(c *gin.Context) {
+	var in dto.ExchangeRequest
+
+	if err := c.BindJSON(&in); err != nil {
+		sendBadRequest(c, err)
+		return
+	}
+
+	email, ok := getAccountFromContext(c)
+	if !ok {
+		sendInternalError(c)
+		return
+	}
+
+	exchangedAmount, wallets, err := h.s.Wallet.Exchange(c, email, in.FromCurrency, in.ToCurrency, in.Amount)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrNegativeAmount):
+			sendBadRequest(c, service.ErrNegativeAmount)
+			return
+		case errors.Is(err, service.ErrZeroAmount):
+			sendBadRequest(c, service.ErrZeroAmount)
+			return
+		case errors.Is(err, service.ErrNonExistentCurrency):
+			sendBadRequest(c, service.ErrNonExistentCurrency)
+			return
+		case errors.Is(err, service.ErrInsufficientBalance):
+			sendBadRequest(c, service.ErrInsufficientBalance)
+			return
+		default:
+			zap.L().Error(err.Error())
+			sendInternalError(c)
+			return
+		}
+	}
+
+	sendOK(c, &dto.ExchangeResponse{
+		Message:         "",
+		ExchangedAmount: exchangedAmount,
+		NewBalance:      wallets,
+	})
+}
