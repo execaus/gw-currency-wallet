@@ -27,3 +27,7 @@ type WithdrawResponse struct {
 	Message    string             `json:"message"`
 	NewBalance pkg.AccountWallets `json:"new_balance"`
 }
+
+type GetRatesResponse struct {
+	Rates pkg.ExchangeRates `json:"rates"`
+}

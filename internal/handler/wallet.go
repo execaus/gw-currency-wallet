@@ -142,3 +142,25 @@ func (h *Handler) Withdraw(c *gin.Context) {
 		NewBalance: wallets,
 	})
 }
+
+// GetRates godoc
+// @Summary Получение актуальных курсов валют
+// @Description Возвращает курсы всех поддерживаемых валют.
+// @Tags exchange
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.GetRatesResponse "Exchange rates"
+// @Failure 500 {object} dto.Message "Failed to retrieve exchange rates"
+// @Router /api/v1/exchange/rates [get]
+// @Security BearerAuth
+func (h *Handler) GetRates(c *gin.Context) {
+	rates, err := h.s.Wallet.GetRates(c)
+	if err != nil {
+		sendInternalError(c)
+		return
+	}
+
+	sendOK(c, &dto.GetRatesResponse{
+		Rates: rates,
+	})
+}

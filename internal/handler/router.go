@@ -19,6 +19,7 @@ func (h *Handler) Router() *gin.Engine {
 		withAuth := v1.Group("", h.authMiddleware)
 		{
 			withAuth.GET("balance", h.GetWallets)
+			withAuth.GET("exchange/rates", h.GetRates)
 
 			wallet := withAuth.Group("wallet")
 			{

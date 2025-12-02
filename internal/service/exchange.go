@@ -13,6 +13,16 @@ type ExchangeService struct {
 	c         gw_grpc.ExchangeServiceClient
 }
 
+func (s *ExchangeService) GetRates(ctx context.Context) (pkg.ExchangeRates, error) {
+	rates, err := s.rateCache.GetData(ctx)
+	if err != nil {
+		zap.L().Error(err.Error())
+		return nil, err
+	}
+
+	return rates, nil
+}
+
 func (s *ExchangeService) IsExistCurrency(ctx context.Context, currency pkg.Currency) (bool, error) {
 	rates, err := s.rateCache.GetData(ctx)
 	if err != nil {

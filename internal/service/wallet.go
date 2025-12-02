@@ -13,6 +13,16 @@ type WalletService struct {
 	s *Service
 }
 
+func (s *WalletService) GetRates(ctx context.Context) (pkg.ExchangeRates, error) {
+	rates, err := s.s.Exchange.GetRates(ctx)
+	if err != nil {
+		zap.L().Error(err.Error())
+		return nil, err
+	}
+
+	return rates, err
+}
+
 func (s *WalletService) Withdraw(ctx context.Context, email string, currency pkg.Currency, amount float32) (pkg.AccountWallets, error) {
 	c, tx, err := s.r.WithTx(ctx)
 	if err != nil {

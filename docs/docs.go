@@ -49,6 +49,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/exchange/rates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает курсы всех поддерживаемых валют.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exchange"
+                ],
+                "summary": "Получение актуальных курсов валют",
+                "responses": {
+                    "200": {
+                        "description": "Exchange rates",
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetRatesResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve exchange rates",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/login": {
             "post": {
                 "description": "Авторизация пользователя. При успешной авторизации возвращается JWT-токен.",
@@ -259,6 +293,14 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.GetRatesResponse": {
+            "type": "object",
+            "properties": {
+                "rates": {
+                    "$ref": "#/definitions/pkg.ExchangeRates"
+                }
+            }
+        },
         "dto.GetWalletsResponse": {
             "type": "object",
             "properties": {
@@ -344,6 +386,13 @@ const docTemplate = `{
             }
         },
         "pkg.AccountWallets": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "number",
+                "format": "float32"
+            }
+        },
+        "pkg.ExchangeRates": {
             "type": "object",
             "additionalProperties": {
                 "type": "number",

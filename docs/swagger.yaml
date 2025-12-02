@@ -16,6 +16,11 @@ definitions:
       new_balance:
         $ref: '#/definitions/pkg.AccountWallets'
     type: object
+  dto.GetRatesResponse:
+    properties:
+      rates:
+        $ref: '#/definitions/pkg.ExchangeRates'
+    type: object
   dto.GetWalletsResponse:
     properties:
       balance:
@@ -76,6 +81,11 @@ definitions:
       format: float32
       type: number
     type: object
+  pkg.ExchangeRates:
+    additionalProperties:
+      format: float32
+      type: number
+    type: object
 info:
   contact: {}
 paths:
@@ -100,6 +110,27 @@ paths:
       summary: Получение кошельков пользователя
       tags:
       - wallet
+  /api/v1/exchange/rates:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает курсы всех поддерживаемых валют.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Exchange rates
+          schema:
+            $ref: '#/definitions/dto.GetRatesResponse'
+        "500":
+          description: Failed to retrieve exchange rates
+          schema:
+            $ref: '#/definitions/dto.Message'
+      security:
+      - BearerAuth: []
+      summary: Получение актуальных курсов валют
+      tags:
+      - exchange
   /api/v1/login:
     post:
       consumes:

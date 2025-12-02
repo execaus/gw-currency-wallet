@@ -11,12 +11,14 @@ import (
 
 type Exchange interface {
 	IsExistCurrency(ctx context.Context, currency pkg.Currency) (bool, error)
+	GetRates(ctx context.Context) (pkg.ExchangeRates, error)
 }
 
 type Wallet interface {
 	GetAllByEmail(ctx context.Context, email string) (pkg.AccountWallets, error)
 	Deposit(ctx context.Context, email string, currency pkg.Currency, amount float32) (pkg.AccountWallets, error)
 	Withdraw(ctx context.Context, email string, currency pkg.Currency, amount float32) (pkg.AccountWallets, error)
+	GetRates(ctx context.Context) (pkg.ExchangeRates, error)
 }
 
 type Auth interface {
