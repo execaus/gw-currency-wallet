@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"gw-currency-wallet/internal/repository"
 	"gw-currency-wallet/pkg"
 
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +23,7 @@ func (s *WalletService) Exchange(ctx context.Context, email string, from, to pkg
 	}
 
 	defer func() {
-		if err = tx.Rollback(ctx); err != nil {
+		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			zap.L().Error(err.Error())
 		}
 	}()
@@ -72,7 +74,7 @@ func (s *WalletService) Withdraw(ctx context.Context, email string, currency pkg
 	}
 
 	defer func() {
-		if err = tx.Rollback(c); err != nil {
+		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			zap.L().Error(err.Error())
 		}
 	}()
@@ -98,7 +100,7 @@ func (s *WalletService) Deposit(ctx context.Context, email string, currency pkg.
 	}
 
 	defer func() {
-		if err = tx.Rollback(c); err != nil {
+		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			zap.L().Error(err.Error())
 		}
 	}()

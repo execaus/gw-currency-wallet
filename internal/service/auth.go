@@ -34,9 +34,9 @@ func (s *AuthService) ComparePassword(hashedPassword, password string) error {
 	return err
 }
 
-func (s *AuthService) GenerateJWT(userID string) (string, error) {
+func (s *AuthService) GenerateJWT(email string) (string, error) {
 	claims := models.AuthClaims{
-		Email: userID,
+		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(DefaultJWTExpireDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

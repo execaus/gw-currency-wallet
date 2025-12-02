@@ -30,7 +30,7 @@ func (s *AccountService) Login(ctx context.Context, username, password string) (
 		return "", ErrInvalidCredentials
 	}
 
-	token, err := s.s.Auth.GenerateJWT(account.Username)
+	token, err := s.s.Auth.GenerateJWT(account.Email)
 	if err != nil {
 		zap.L().Error(err.Error())
 		return "", err

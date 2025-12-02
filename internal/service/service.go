@@ -26,7 +26,7 @@ type Wallet interface {
 type Auth interface {
 	HashPassword(password string) (string, error)
 	ComparePassword(hashedPassword, password string) error
-	GenerateJWT(userID string) (string, error)
+	GenerateJWT(email string) (string, error)
 	GetClaims(tokenString string) (*models.AuthClaims, error)
 }
 

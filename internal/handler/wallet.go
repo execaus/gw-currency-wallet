@@ -214,7 +214,7 @@ func (h *Handler) Exchange(c *gin.Context) {
 	}
 
 	sendOK(c, &dto.ExchangeResponse{
-		Message:         "",
+		Message:         "Exchange successful",
 		ExchangedAmount: exchangedAmount,
 		NewBalance:      wallets,
 	})

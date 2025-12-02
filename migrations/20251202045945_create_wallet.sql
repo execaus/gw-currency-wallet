@@ -8,7 +8,7 @@ CREATE TABLE app.wallet (
     PRIMARY KEY (email, currency)
 );
 ALTER TABLE app.wallet
-    ADD CONSTRAINT account_balance_email_fk
+    ADD CONSTRAINT account_wallet_fk
     FOREIGN KEY (email) REFERENCES app.account(email) ON DELETE CASCADE;
 
 -- +goose StatementEnd
@@ -16,5 +16,5 @@ ALTER TABLE app.wallet
 -- +goose Down
 -- +goose StatementBegin
 
-DROP TABLE IF EXISTS app.account_balance;
+DROP TABLE IF EXISTS app.wallet;
 -- +goose StatementEnd
