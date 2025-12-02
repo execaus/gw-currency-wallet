@@ -1,4 +1,9 @@
 definitions:
+  dto.GetWalletsResponse:
+    properties:
+      balance:
+        $ref: '#/definitions/models.AccountWallets'
+    type: object
   dto.LoginRequest:
     properties:
       password:
@@ -32,9 +37,35 @@ definitions:
     - password
     - username
     type: object
+  models.AccountWallets:
+    additionalProperties:
+      format: float32
+      type: number
+    type: object
 info:
   contact: {}
 paths:
+  /api/v1/balance:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список кошельков и их балансы для авторизованного пользователя.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User wallets
+          schema:
+            $ref: '#/definitions/dto.GetWalletsResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Message'
+      security:
+      - BearerAuth: []
+      summary: Получение кошельков пользователя
+      tags:
+      - wallet
   /api/v1/login:
     post:
       consumes:

@@ -9,3 +9,9 @@ type AppAccount struct {
 	Username string
 	Password string
 }
+
+type AppWallet struct {
+	Email    string
+	Currency string
+	Balance  float32
+}

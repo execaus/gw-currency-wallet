@@ -7,6 +7,10 @@ import (
 	"gw-currency-wallet/internal/repository"
 )
 
+type Wallet interface {
+	GetAllByEmail(ctx context.Context, email string) (models.AccountWallets, error)
+}
+
 type Auth interface {
 	HashPassword(password string) (string, error)
 	ComparePassword(hashedPassword, password string) error
@@ -22,6 +26,7 @@ type Account interface {
 type Service struct {
 	Auth
 	Account
+	Wallet
 }
 
 func NewService(repo repository.Repository, authConfig *config.AuthConfig) *Service {
@@ -29,6 +34,7 @@ func NewService(repo repository.Repository, authConfig *config.AuthConfig) *Serv
 
 	s.Account = NewAccountService(repo.Account, &s)
 	s.Auth = NewAuthService(authConfig)
+	s.Wallet = NewWalletService(repo.Wallet)
 
 	return &s
 }

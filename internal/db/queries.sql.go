@@ -41,6 +41,32 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ap
 	return i, err
 }
 
+const getWalletsByEmail = `-- name: GetWalletsByEmail :many
+SELECT email, currency, balance
+FROM app.wallet
+WHERE email = $1
+`
+
+func (q *Queries) GetWalletsByEmail(ctx context.Context, email string) ([]AppWallet, error) {
+	rows, err := q.db.Query(ctx, getWalletsByEmail, email)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AppWallet
+	for rows.Next() {
+		var i AppWallet
+		if err := rows.Scan(&i.Email, &i.Currency, &i.Balance); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const isAccountExistsByEmail = `-- name: IsAccountExistsByEmail :one
 SELECT EXISTS (
     SELECT 1 FROM app.account WHERE email = $1

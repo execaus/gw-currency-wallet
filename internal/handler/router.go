@@ -15,6 +15,12 @@ func (h *Handler) Router() *gin.Engine {
 	{
 		v1.POST("register", h.Register)
 		v1.POST("login", h.Login)
+
+		withAuth := v1.Group("", h.authMiddleware)
+		{
+			withAuth.GET("balance", h.GetWallets)
+		}
+
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

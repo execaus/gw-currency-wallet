@@ -7,6 +7,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type Wallet interface {
+	GetAllByEmail(ctx context.Context, email string) ([]db.AppWallet, error)
+}
+
 type Account interface {
 	IsEmailExist(ctx context.Context, email string) (bool, error)
 	IsUsernameExist(ctx context.Context, username string) (bool, error)
@@ -15,6 +19,7 @@ type Account interface {
 }
 
 type Repository struct {
+	Wallet
 	Account
 }
 
@@ -23,5 +28,6 @@ func NewRepository(pool *pgxpool.Pool) Repository {
 
 	return Repository{
 		Account: NewAccountRepository(q),
+		Wallet:  NewWalletRepository(q),
 	}
 }

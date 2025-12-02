@@ -23,6 +23,10 @@ func sendOK(c *gin.Context, body any) {
 	send(c, http.StatusOK, body)
 }
 
+func sendUnauthorized(c *gin.Context, err error) {
+	send(c, http.StatusUnauthorized, dto.Message{Message: err.Error()})
+}
+
 func send(c *gin.Context, status int, body any) {
 	c.AbortWithStatusJSON(status, body)
 }

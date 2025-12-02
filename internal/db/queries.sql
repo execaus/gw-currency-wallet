@@ -17,3 +17,8 @@ SELECT EXISTS (
 SELECT *
 FROM app.account
 WHERE username = $1;
+
+-- name: GetWalletsByEmail :many
+SELECT *
+FROM app.wallet
+WHERE email = $1;

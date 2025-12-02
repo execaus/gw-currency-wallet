@@ -15,6 +15,40 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/balance": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список кошельков и их балансы для авторизованного пользователя.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallet"
+                ],
+                "summary": "Получение кошельков пользователя",
+                "responses": {
+                    "200": {
+                        "description": "User wallets",
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetWalletsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Message"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/login": {
             "post": {
                 "description": "Авторизация пользователя. При успешной авторизации возвращается JWT-токен.",
@@ -97,6 +131,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.GetWalletsResponse": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "$ref": "#/definitions/models.AccountWallets"
+                }
+            }
+        },
         "dto.LoginRequest": {
             "type": "object",
             "required": [
@@ -145,6 +187,13 @@ const docTemplate = `{
                 "username": {
                     "type": "string"
                 }
+            }
+        },
+        "models.AccountWallets": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "number",
+                "format": "float32"
             }
         }
     }
