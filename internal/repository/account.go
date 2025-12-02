@@ -4,15 +4,18 @@ import (
 	"context"
 	"gw-currency-wallet/internal/db"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
 type AccountRepository struct {
-	q *db.Queries
+	TxRepositoryImpl
 }
 
 func (r *AccountRepository) GetByUsername(ctx context.Context, username string) (*db.AppAccount, error) {
-	account, err := r.q.GetAccountByUsername(ctx, username)
+	q := r.getQueries(ctx)
+
+	account, err := q.GetAccountByUsername(ctx, username)
 	if err != nil {
 		zap.L().Error(err.Error())
 		return nil, err
@@ -22,7 +25,9 @@ func (r *AccountRepository) GetByUsername(ctx context.Context, username string) 
 }
 
 func (r *AccountRepository) IsEmailExist(ctx context.Context, email string) (bool, error) {
-	isExist, err := r.q.IsAccountExistsByEmail(ctx, email)
+	q := r.getQueries(ctx)
+
+	isExist, err := q.IsAccountExistsByEmail(ctx, email)
 	if err != nil {
 		zap.L().Error(err.Error())
 		return false, err
@@ -32,7 +37,9 @@ func (r *AccountRepository) IsEmailExist(ctx context.Context, email string) (boo
 }
 
 func (r *AccountRepository) IsUsernameExist(ctx context.Context, username string) (bool, error) {
-	isExist, err := r.q.IsAccountExistsByUsername(ctx, username)
+	q := r.getQueries(ctx)
+
+	isExist, err := q.IsAccountExistsByUsername(ctx, username)
 	if err != nil {
 		zap.L().Error(err.Error())
 		return false, err
@@ -42,7 +49,9 @@ func (r *AccountRepository) IsUsernameExist(ctx context.Context, username string
 }
 
 func (r *AccountRepository) Create(ctx context.Context, email, username, passwordHash string) (*db.AppAccount, error) {
-	row, err := r.q.CreateAccount(ctx, db.CreateAccountParams{
+	q := r.getQueries(ctx)
+
+	row, err := q.CreateAccount(ctx, db.CreateAccountParams{
 		Email:    email,
 		Username: username,
 		Password: passwordHash,
@@ -55,8 +64,11 @@ func (r *AccountRepository) Create(ctx context.Context, email, username, passwor
 	return &row, nil
 }
 
-func NewAccountRepository(queries *db.Queries) *AccountRepository {
+func NewAccountRepository(pool *pgxpool.Pool, queries *db.Queries) *AccountRepository {
 	return &AccountRepository{
-		q: queries,
+		TxRepositoryImpl{
+			db: pool,
+			q:  queries,
+		},
 	}
 }

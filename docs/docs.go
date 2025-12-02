@@ -128,14 +128,91 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/wallet/deposit": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Позволяет пользователю пополнить свой счет. Проверяется корректность суммы и валюты.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallet"
+                ],
+                "summary": "Пополнение счета пользователя",
+                "parameters": [
+                    {
+                        "description": "Сумма и валюта для пополнения",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DepositRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Account topped up successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.DepositResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid amount or currency",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Message"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.DepositRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "currency"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DepositResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "new_balance": {
+                    "$ref": "#/definitions/pkg.AccountWallets"
+                }
+            }
+        },
         "dto.GetWalletsResponse": {
             "type": "object",
             "properties": {
                 "balance": {
-                    "$ref": "#/definitions/models.AccountWallets"
+                    "$ref": "#/definitions/pkg.AccountWallets"
                 }
             }
         },
@@ -189,7 +266,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.AccountWallets": {
+        "pkg.AccountWallets": {
             "type": "object",
             "additionalProperties": {
                 "type": "number",

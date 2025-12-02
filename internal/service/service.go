@@ -4,11 +4,18 @@ import (
 	"context"
 	"gw-currency-wallet/config"
 	"gw-currency-wallet/internal/models"
+	gw_grpc "gw-currency-wallet/internal/pb/exchange"
 	"gw-currency-wallet/internal/repository"
+	"gw-currency-wallet/pkg"
 )
 
+type Exchange interface {
+	IsExistCurrency(ctx context.Context, currency pkg.Currency) (bool, error)
+}
+
 type Wallet interface {
-	GetAllByEmail(ctx context.Context, email string) (models.AccountWallets, error)
+	GetAllByEmail(ctx context.Context, email string) (pkg.AccountWallets, error)
+	Deposit(ctx context.Context, email string, currency pkg.Currency, amount float32) (pkg.AccountWallets, error)
 }
 
 type Auth interface {
@@ -27,14 +34,16 @@ type Service struct {
 	Auth
 	Account
 	Wallet
+	Exchange
 }
 
-func NewService(repo repository.Repository, authConfig *config.AuthConfig) *Service {
-	s := Service{}
+func NewService(ctx context.Context, repo *repository.Repository, authConfig *config.AuthConfig, exchangeClient gw_grpc.ExchangeServiceClient) *Service {
+	s := &Service{}
 
-	s.Account = NewAccountService(repo.Account, &s)
+	s.Account = NewAccountService(repo.Account, s)
 	s.Auth = NewAuthService(authConfig)
-	s.Wallet = NewWalletService(repo.Wallet)
+	s.Wallet = NewWalletService(repo.Wallet, s)
+	s.Exchange = NewExchangeService(ctx, exchangeClient)
 
-	return &s
+	return s
 }

@@ -1,8 +1,25 @@
 definitions:
+  dto.DepositRequest:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+    required:
+    - amount
+    - currency
+    type: object
+  dto.DepositResponse:
+    properties:
+      message:
+        type: string
+      new_balance:
+        $ref: '#/definitions/pkg.AccountWallets'
+    type: object
   dto.GetWalletsResponse:
     properties:
       balance:
-        $ref: '#/definitions/models.AccountWallets'
+        $ref: '#/definitions/pkg.AccountWallets'
     type: object
   dto.LoginRequest:
     properties:
@@ -37,7 +54,7 @@ definitions:
     - password
     - username
     type: object
-  models.AccountWallets:
+  pkg.AccountWallets:
     additionalProperties:
       format: float32
       type: number
@@ -119,4 +136,37 @@ paths:
       summary: Регистрация пользователя
       tags:
       - auth
+  /api/v1/wallet/deposit:
+    post:
+      consumes:
+      - application/json
+      description: Позволяет пользователю пополнить свой счет. Проверяется корректность
+        суммы и валюты.
+      parameters:
+      - description: Сумма и валюта для пополнения
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DepositRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account topped up successfully
+          schema:
+            $ref: '#/definitions/dto.DepositResponse'
+        "400":
+          description: Invalid amount or currency
+          schema:
+            $ref: '#/definitions/dto.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Message'
+      security:
+      - BearerAuth: []
+      summary: Пополнение счета пользователя
+      tags:
+      - wallet
 swagger: "2.0"

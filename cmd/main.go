@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gw-currency-wallet/config"
 	"gw-currency-wallet/internal/handler"
+	gw_grpc "gw-currency-wallet/internal/pb/exchange"
 	"gw-currency-wallet/internal/repository"
 	"gw-currency-wallet/internal/service"
 	"net/http"
@@ -16,6 +17,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func init() {
@@ -40,8 +43,15 @@ func main() {
 		zap.L().Fatal("error to open connect to database")
 	}
 
+	grpcConn, err := grpc.NewClient(
+		fmt.Sprintf("%s:%s", cfg.ExchangeService.Host, cfg.ExchangeService.Port),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+
+	exchangeClient := gw_grpc.NewExchangeServiceClient(grpcConn)
+
 	r := repository.NewRepository(pool)
-	s := service.NewService(r, &cfg.Auth)
+	s := service.NewService(ctx, r, &cfg.Auth, exchangeClient)
 	h := handler.NewHandler(s)
 
 	stop := make(chan os.Signal, 1)
@@ -72,6 +82,11 @@ func main() {
 
 	if pool != nil {
 		pool.Close()
+	}
+	if grpcConn != nil {
+		if err := grpcConn.Close(); err != nil {
+			zap.L().Error("failed to close gRPC connection", zap.Error(err))
+		}
 	}
 
 	zap.L().Info("server gracefully stopped")

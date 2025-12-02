@@ -1,15 +1,20 @@
 package config
 
 import (
-	"log"
+	"flag"
+	"fmt"
+	"os"
+	"strconv"
 
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Auth     AuthConfig
+	Server          ServerConfig
+	Database        DatabaseConfig
+	Auth            AuthConfig
+	ExchangeService ExchangeService
 }
 
 type ServerConfig struct {
@@ -29,29 +34,48 @@ type AuthConfig struct {
 	SecretKey string
 }
 
-const configPath = "./config.env"
+type ExchangeService struct {
+	Host string
+	Port string
+}
 
 func LoadConfig() *Config {
-	var cfg Config
+	configFile := flag.String("c", "", "path to config file")
+	flag.Parse()
 
-	v := viper.New()
-	v.SetConfigFile(configPath)
-	v.SetConfigType("env")
-
-	if err := v.ReadInConfig(); err != nil {
-		log.Fatalf("Failed to read config file: %v", err)
+	if *configFile == "" {
+		zap.L().Fatal("path to config file is required")
 	}
 
-	cfg.Server.Port = v.GetString("SERVER_PORT")
+	if _, err := os.Stat(*configFile); err == nil {
+		if err = godotenv.Load(*configFile); err != nil {
+			zap.L().Fatal(fmt.Sprintf("error loading config file %s: %v", *configFile, err))
+		}
+	} else {
+		zap.L().Error(fmt.Sprintf("config file not found: %s", *configFile))
+	}
 
-	cfg.Database.Host = v.GetString("DATABASE_HOST")
-	cfg.Database.Port = v.GetInt("DATABASE_PORT")
-	cfg.Database.User = v.GetString("DATABASE_USER")
-	cfg.Database.Password = v.GetString("DATABASE_PASSWORD")
-	cfg.Database.Name = v.GetString("DATABASE_NAME")
-	cfg.Database.Test = v.GetBool("DATABASE_TEST")
+	cfg := &Config{}
 
-	cfg.Auth.SecretKey = v.GetString("JWT_KEY")
+	cfg.Server.Port = os.Getenv("SERVER_PORT")
 
-	return &cfg
+	cfg.Database.Host = os.Getenv("DATABASE_HOST")
+	dbPort := os.Getenv("DATABASE_PORT")
+	if dbPort != "" {
+		if port, err := strconv.Atoi(dbPort); err == nil {
+			cfg.Database.Port = port
+		} else {
+			zap.L().Fatal(fmt.Sprintf("invalid DB_PORT value: %s", dbPort))
+		}
+	}
+	cfg.Database.User = os.Getenv("DATABASE_USER")
+	cfg.Database.Password = os.Getenv("DATABASE_PASSWORD")
+	cfg.Database.Name = os.Getenv("DATABASE_NAME")
+
+	cfg.Auth.SecretKey = os.Getenv("JWT_KEY")
+
+	cfg.ExchangeService.Host = os.Getenv("EXCHANGE_SERVICE_HOST")
+	cfg.ExchangeService.Port = os.Getenv("EXCHANGE_SERVICE_PORT")
+
+	return cfg
 }

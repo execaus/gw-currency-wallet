@@ -10,6 +10,7 @@ func NewPostgresRepository(pool *pgxpool.Pool) (*Repository, error) {
 	queries := db.New(pool)
 
 	return &Repository{
-		Account: NewAccountRepository(queries),
+		Account: NewAccountRepository(pool, queries),
+		Wallet:  NewWalletRepository(pool, queries),
 	}, nil
 }

@@ -28,6 +28,21 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 	return i, err
 }
 
+const createWallet = `-- name: CreateWallet :exec
+INSERT INTO app.wallet (email, currency, balance)
+VALUES ($1, $2, 0)
+`
+
+type CreateWalletParams struct {
+	Email    string
+	Currency string
+}
+
+func (q *Queries) CreateWallet(ctx context.Context, arg CreateWalletParams) error {
+	_, err := q.db.Exec(ctx, createWallet, arg.Email, arg.Currency)
+	return err
+}
+
 const getAccountByUsername = `-- name: GetAccountByUsername :one
 SELECT email, username, password
 FROM app.account
@@ -38,6 +53,25 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ap
 	row := q.db.QueryRow(ctx, getAccountByUsername, username)
 	var i AppAccount
 	err := row.Scan(&i.Email, &i.Username, &i.Password)
+	return i, err
+}
+
+const getWalletForUpdate = `-- name: GetWalletForUpdate :one
+SELECT email, currency, balance
+FROM app.wallet
+WHERE email = $1 and currency = $2
+FOR UPDATE
+`
+
+type GetWalletForUpdateParams struct {
+	Email    string
+	Currency string
+}
+
+func (q *Queries) GetWalletForUpdate(ctx context.Context, arg GetWalletForUpdateParams) (AppWallet, error) {
+	row := q.db.QueryRow(ctx, getWalletForUpdate, arg.Email, arg.Currency)
+	var i AppWallet
+	err := row.Scan(&i.Email, &i.Currency, &i.Balance)
 	return i, err
 }
 
@@ -91,4 +125,42 @@ func (q *Queries) IsAccountExistsByUsername(ctx context.Context, username string
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const isExistCurrency = `-- name: IsExistCurrency :one
+SELECT EXISTS (
+    SELECT 1 FROM app.wallet WHERE email = $1 and currency = $2
+)
+`
+
+type IsExistCurrencyParams struct {
+	Email    string
+	Currency string
+}
+
+func (q *Queries) IsExistCurrency(ctx context.Context, arg IsExistCurrencyParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isExistCurrency, arg.Email, arg.Currency)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const updateWallet = `-- name: UpdateWallet :one
+UPDATE app.wallet
+SET balance = $3
+WHERE email = $1 and currency = $2
+RETURNING email, currency, balance
+`
+
+type UpdateWalletParams struct {
+	Email    string
+	Currency string
+	Balance  float32
+}
+
+func (q *Queries) UpdateWallet(ctx context.Context, arg UpdateWalletParams) (AppWallet, error) {
+	row := q.db.QueryRow(ctx, updateWallet, arg.Email, arg.Currency, arg.Balance)
+	var i AppWallet
+	err := row.Scan(&i.Email, &i.Currency, &i.Balance)
+	return i, err
 }
