@@ -16,6 +16,7 @@ type Exchange interface {
 type Wallet interface {
 	GetAllByEmail(ctx context.Context, email string) (pkg.AccountWallets, error)
 	Deposit(ctx context.Context, email string, currency pkg.Currency, amount float32) (pkg.AccountWallets, error)
+	Withdraw(ctx context.Context, email string, currency pkg.Currency, amount float32) (pkg.AccountWallets, error)
 }
 
 type Auth interface {

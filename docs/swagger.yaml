@@ -54,6 +54,23 @@ definitions:
     - password
     - username
     type: object
+  dto.WithdrawRequest:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+    required:
+    - amount
+    - currency
+    type: object
+  dto.WithdrawResponse:
+    properties:
+      message:
+        type: string
+      new_balance:
+        $ref: '#/definitions/pkg.AccountWallets'
+    type: object
   pkg.AccountWallets:
     additionalProperties:
       format: float32
@@ -167,6 +184,38 @@ paths:
       security:
       - BearerAuth: []
       summary: Пополнение счета пользователя
+      tags:
+      - wallet
+  /api/v1/wallet/withdraw:
+    post:
+      consumes:
+      - application/json
+      description: Позволяет пользователю вывести средства со своего счета.
+      parameters:
+      - description: Сумма и валюта для вывода
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.WithdrawRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Withdrawal successful
+          schema:
+            $ref: '#/definitions/dto.WithdrawResponse'
+        "400":
+          description: Insufficient funds or invalid amount
+          schema:
+            $ref: '#/definitions/dto.Message'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.Message'
+      security:
+      - BearerAuth: []
+      summary: Вывод средств со счета пользователя
       tags:
       - wallet
 swagger: "2.0"

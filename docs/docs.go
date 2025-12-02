@@ -179,6 +179,57 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/wallet/withdraw": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Позволяет пользователю вывести средства со своего счета.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallet"
+                ],
+                "summary": "Вывод средств со счета пользователя",
+                "parameters": [
+                    {
+                        "description": "Сумма и валюта для вывода",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.WithdrawRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Withdrawal successful",
+                        "schema": {
+                            "$ref": "#/definitions/dto.WithdrawResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Insufficient funds or invalid amount",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Message"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -263,6 +314,32 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.WithdrawRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "currency"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.WithdrawResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "new_balance": {
+                    "$ref": "#/definitions/pkg.AccountWallets"
                 }
             }
         },

@@ -19,6 +19,12 @@ func (h *Handler) Router() *gin.Engine {
 		withAuth := v1.Group("", h.authMiddleware)
 		{
 			withAuth.GET("balance", h.GetWallets)
+
+			wallet := withAuth.Group("wallet")
+			{
+				wallet.POST("deposit", h.Deposit)
+				wallet.POST("withdraw", h.Withdraw)
+			}
 		}
 
 	}

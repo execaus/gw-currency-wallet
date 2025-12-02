@@ -88,3 +88,57 @@ func (h *Handler) Deposit(c *gin.Context) {
 		NewBalance: wallets,
 	})
 }
+
+// Withdraw godoc
+// @Summary Вывод средств со счета пользователя
+// @Description Позволяет пользователю вывести средства со своего счета.
+// @Tags wallet
+// @Accept json
+// @Produce json
+// @Param input body dto.WithdrawRequest true "Сумма и валюта для вывода"
+// @Success 200 {object} dto.WithdrawResponse "Withdrawal successful"
+// @Failure 400 {object} dto.Message "Insufficient funds or invalid amount"
+// @Failure 500 {object} dto.Message "Internal server error"
+// @Router /api/v1/wallet/withdraw [post]
+// @Security BearerAuth
+func (h *Handler) Withdraw(c *gin.Context) {
+	var in dto.WithdrawRequest
+
+	if err := c.BindJSON(&in); err != nil {
+		sendBadRequest(c, err)
+		return
+	}
+
+	email, ok := getAccountFromContext(c)
+	if !ok {
+		sendInternalError(c)
+		return
+	}
+
+	wallets, err := h.s.Withdraw(c, email, in.Currency, in.Amount)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrNegativeAmount):
+			sendBadRequest(c, service.ErrNegativeAmount)
+			return
+		case errors.Is(err, service.ErrZeroAmount):
+			sendBadRequest(c, service.ErrZeroAmount)
+			return
+		case errors.Is(err, service.ErrNonExistentCurrency):
+			sendBadRequest(c, service.ErrNonExistentCurrency)
+			return
+		case errors.Is(err, service.ErrInsufficientBalance):
+			sendBadRequest(c, service.ErrInsufficientBalance)
+			return
+		default:
+			zap.L().Error(err.Error())
+			sendInternalError(c)
+			return
+		}
+	}
+
+	sendOK(c, &dto.WithdrawResponse{
+		Message:    "Withdrawal successful",
+		NewBalance: wallets,
+	})
+}

@@ -6,4 +6,5 @@ var (
 	ErrNegativeAmount      = errors.New("amount cannot be negative")
 	ErrZeroAmount          = errors.New("amount cannot be zero")
 	ErrNonExistentCurrency = errors.New("currency does not exist")
+	ErrInsufficientBalance = errors.New("insufficient balance")
 )

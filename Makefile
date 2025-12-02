@@ -4,6 +4,9 @@ PROTO_OUT_DIR := internal/pb
 PROTOC := protoc
 PROTOC_PLUGINS := google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
+swagger:
+	swag init -g cmd/main.go -o docs
+
 install_protoc_plugins:
 	@echo "Installing protoc Go plugins..."
 	@for plugin in $(PROTOC_PLUGINS); do \
@@ -43,8 +46,3 @@ update_api_contracts:
 	)
 
 update_generate_contracts: update_api_contracts generate_protobuf
-
-swagger: swag init -g cmd/main.go -o docs
-
-grpc_mocks:
-	mockgen -source=internal/pb/exchange/service_grpc.pb.go -destination=internal/pb/exchange/mocks/mock_exchange_service.go -package=mocks ExchangeServiceClient
